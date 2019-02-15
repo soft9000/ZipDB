@@ -2,8 +2,7 @@
 
 # Mission: Opportunity to create an externalizable, database-style, record.
 # The default row shall provide us with a consistent set of values, as well
-# as the ability to specify an unlimited set of asymetrical user values, as
-# well.
+# as the ability to specify an unlimited set of asymetrical user values.
 
 # Status: Testing Success
 # Date Created: 2019-02-15
@@ -34,7 +33,7 @@ class RowOne:
         return list(self._data.keys())
 
     def key_setters(self):
-        ''' Return the list of .set() user-changable keys for all data. '''
+        ''' Return the list of .set() / user-changable keys for all columns / fields. '''
         results = list()
         for key in self._data:
             if key in RowOne.reserved:
@@ -43,7 +42,7 @@ class RowOne:
         return results
 
     def reset(self):
-        ''' Re-generate all key fields, including the id. Preserve keyed user-data, if present. '''
+        ''' Re-generate all key fields, including the id. PRESERVE user-data, if present. '''
         import uuid
         self._data['id'] = str(uuid.uuid1())
         self._data['time'] = time.time()
@@ -51,7 +50,7 @@ class RowOne:
         self._data['data'] = ''
 
     def reset_all(self):
-        ''' Re-generate all fields, removing any keyed user data as well.'''
+        ''' Re-generate all fields, REMOVING any user data.'''
         self._data = OrderedDict()
         self.reset()
 
@@ -63,7 +62,8 @@ class RowOne:
         return True
 
     def get(self, key):
-        ''' Return the value for a key. None if not found ... or if key is set to same. '''
+        ''' Return the value for a key. None if not found ... or if key is set to same.
+        None on error. '''
         if key in self._data:
             return self._data[key]
         return None
@@ -72,6 +72,8 @@ class RowOne:
         self._data['time'] = time.time()
 
     def time_info(self, local=False):
+        ''' Return this row's tm structure for either the local, or global (GMT) lime zone.
+        False on error. '''
         try:
             if local:
                 return time.localtime(self._data['time'])
@@ -82,6 +84,7 @@ class RowOne:
             return False
 
     def time_string(self, local=False):
+        ''' Format up a classic, user-displayable, time-string. False on error. '''
         try:
             return time.asctime(self.time_info(local))
         except:
@@ -117,7 +120,7 @@ class RowOne:
             return False
 
     @subject.setter
-    def data(self, value):
+    def subject(self, value):
         self._data['subject'] = value
         return True
 
@@ -138,7 +141,7 @@ class RowOne:
         ''' Populate a Row from a dictionary. Note that the dictionary does
         not necessarily have to be a Row, to have the default RowOne() properies added.
         Strategy allows for unique data values to be provided. Note also that if the
-        time key is not integral, then the present time will be asserted. Returns
+        time key is not integral, then the present time will be used. Returns
         False on error.        '''
         try:
             obj = eval(string)
@@ -168,12 +171,24 @@ if __name__ == '__main__':
     row = RowOne(time=1234567890)
     assert(row.time_string(local=True) == 'Fri Feb 13 18:31:30 2009')
     assert(row.time_string(local=False) == 'Fri Feb 13 23:31:30 2009')
+    try:
+        row.id = 123
+        raise Exception("Error: The ID should never change.")
+    except:
+        pass
+    # Test properties:
+    row.data    = "my data"
+    row.subject = "my\nsubject"
+    assert(row.data == "my data")
+    assert(row.subject == "my\nsubject")
+    assert(row.data != "my")
+    assert(row.subject != "subject")
     # Test user-modifiable values (defaults)
     keys = row.key_setters()
     for key in keys:
         assert(row.set(key, 'z' + key))
         assert(row.get(key) == 'z'+ key)
-    # Test user-modifiable values (superser)
+    # Test user-modifiable values (superset)
     keys = row.key_setters()
     keys.append('shazam')
     keys.append('mazsham')

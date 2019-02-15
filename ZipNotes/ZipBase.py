@@ -6,9 +6,9 @@ from zipfile import ZipFile
 class ZipArchiveBase():
 
     '''
-    Once a file has been written to a zip archive, the archive file is no longer updateable.
+    Once a file has been written to a zip archive, the enarchived file is no longer updatable.
     To update any file in an archive, that archive will need to be re-created so as to use
-    any updated file content.
+    any updatable file content.
     '''
 
     def __init__(self, archive_file="Enigma.zip"):
@@ -17,8 +17,8 @@ class ZipArchiveBase():
 
 
     def destroy(self):
-        ''' Destroy any existing archive file. True is return when archive no longer exists.
-        False is returned on archive removal error. '''
+        ''' Destroy any existing archive file. True when archive no longer exists.
+        False is returned upon archive removal error. '''
         import os
         try:
             if self.exists():
@@ -85,7 +85,7 @@ class ZipArchiveBase():
 
 
     def archive_next(self, message, file):
-        ''' Once created we can add more files to the archive. '''
+        ''' Once created via .archive_first() we can add more files to the archive. '''
         try:
             with ZipFile(self._file, 'a') as zZip:
                 with zZip.open(file, 'w') as fh:

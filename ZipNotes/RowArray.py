@@ -17,6 +17,10 @@ class RowArray:
     def __init__(self):
         self._db = OrderedDict()
 
+    def clear(self):
+        ''' Remove all items from the databases. '''
+        self._db.clear()
+
     def pack(self):
         ''' Remove any items marked for deletion from the database. '''
         datum = OrderedDict()
@@ -55,7 +59,7 @@ class RowArray:
 
     def append(self, row, unique=False):
         ''' Add a new row to the database. Return True if all went well, else False.
-        Use "unique" to manage append / update chacking '''
+        Use "unique" to manage append / update checking. '''
         if not isinstance(row, RowOne):
             return False
         if unique and row.id in self._db:
@@ -70,11 +74,20 @@ class RowArray:
             results[key] = self._db[key].subject
         return results
 
-    def read(self, key):
-        ''' Retrieve a database row by it's id ('key'.)
-        Return None if not found. '''
+    def lookup(self, key):
+        ''' Retrieve a database row by id ('key'.) Return None if not found. '''
+        if isinstance(key, RowOne):
+            return self.lookup(key.id)
         if key in self._db:
             return self._db[key]
+        return None
+
+    def read(self, row):
+        ''' Re-retrieve a database row. Return None if not found. '''
+        if not isinstance(row, RowOne):
+            return None
+        if row.id in self._db:
+            return self._db[row.id]
         return None
 
     def update(self, row):
@@ -89,7 +102,7 @@ class RowArray:
             return False
 
     def delete(self, row):
-        ''' Use the Id to mark a row for removal from the database. Row
+        ''' Use the row's .id to mark it for database removal. Row
         identifier will remain in the database until the next .pack()
         operation. This function returns False if the row was not found,
         else True when the row has been tagged for removal. '''
@@ -118,10 +131,10 @@ class RowArray:
 
     @staticmethod
     def ToString(instance):
-        ''' Create a string representing the entire database. Items marked for
+        ''' Create a string representing of the entire database. Items marked for
         deletion WILL be omitted from the final string representation. This operation
-        returns False on error.'''
-        if not isinstance(instance):
+        returns False on error. '''
+        if not isinstance(instance, RowArray):
             return False
         results = list()
         for key in instance._db:
@@ -133,4 +146,63 @@ class RowArray:
 
 
 if __name__ == '__main__':
-    pass
+    # Test counting, instance creation / lookup / reading operations:
+    db = RowArray()
+    assert(db.count() == 0)
+    assert(db.count_deleted() == 0)
+    row = db.create()
+    assert(db.count() == 1)
+    assert(db.count_deleted() == 0)
+    row2 = db.create()
+    assert(db.count() == 2)
+    assert(db.count_deleted() == 0)
+    assert(len(db.get_subjects()) == 2)
+    row.subject = "row subject 1"
+    row2.subject = "row subject 2"
+    assert(db.read(row).subject == row.subject)
+    assert(db.read(row2).subject == row2.subject)
+    assert(db.lookup(row.id).subject == row.subject)
+    assert(db.lookup(row).subject == row.subject)
+    assert(db.lookup(row).subject != row2.subject)
+    values = tuple(db.get_subjects())
+    assert(db.lookup(values[0]).subject == row.subject)
+    assert(db.lookup(values[1]).subject == row2.subject)
+    # Test stringification:
+    db2 = RowArray.FromString(RowArray.ToString(db))
+    assert(db2.count() == db.count())
+    assert(db2.lookup(values[0]).subject == row.subject)
+    assert(db2.lookup(values[1]).subject == row2.subject)
+    # Test cleanup:
+    db2.delete(row)
+    assert(db2.count() != db.count())
+    assert(db2.count() == 1)
+    assert(db2.count_deleted() == 1)
+    db2.delete(row2)
+    assert(db2.count() == 0)
+    assert(db2.count_deleted() == 2)
+    db2.pack()
+    assert(db2.count() == 0)
+    assert(db2.count_deleted() == 0)
+    db2 = RowArray.FromString(RowArray.ToString(db))
+    assert(db2.count() == db.count())
+    db2.clear()
+    assert(db2.count() == 0)
+    assert(db2.count_deleted() == 0)
+    # Test append and update:
+    db2 = RowArray.FromString(RowArray.ToString(db))
+    zrow = RowOne()
+    assert(db2.exists(zrow) == False)
+    assert(db2.update(zrow) == False)
+    assert(db2.append(zrow) == True)
+    assert(db2.exists(zrow) == True)
+    assert(db2.count() == 3)
+    zrow.data = "My Data"
+    assert(db2.lookup(zrow).data == "My Data")
+    zrow.subject = "My Subject"
+    assert(db2.lookup(zrow).subject == "My Subject")
+    print("Testing Success")
+   
+    
+    
+    
+    
