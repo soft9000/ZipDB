@@ -7,10 +7,13 @@
 
 # Status: Testing Success
 # Date Created: 2019-02-15
+import os
+import sys
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 
 from collections import OrderedDict
 
-from Row import RowOne
+from ZipNotes.Row import RowOne
 
 class RowArray:
 

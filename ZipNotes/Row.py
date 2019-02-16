@@ -7,6 +7,10 @@
 # Status: Testing Success
 # Date Created: 2019-02-15
 
+import os
+import sys
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
+
 import time
 from collections import OrderedDict
 
