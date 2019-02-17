@@ -18,6 +18,11 @@ class ZipArchiveBase():
         ''' Define an archive file. '''
         self._file = archive_file
 
+    @property
+    def file(self):
+        ''' Query the archive file-name. '''
+        return self._file
+
 
     def destroy(self):
         ''' Destroy any existing archive file. True when archive no longer exists.
